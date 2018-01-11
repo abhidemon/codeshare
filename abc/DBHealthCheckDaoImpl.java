@@ -30,6 +30,7 @@ public class DBHealthCheckDaoImpl implements DBHealthCheckDao {
         Mongo mongo = clusterConnService.getConnFromClusterName(clusterName);
 
         try {
+            LOGGER.info("Trying to hit mongodb for clusterName: "+clusterName);
             DBObject ping = new BasicDBObject("ping", "1");
             mongo.getDB("dbname").command(ping);
             ClusterInfo ci = clusterInfoDAO.get("default");
