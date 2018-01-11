@@ -910,6 +910,26 @@
 		}
 
 
+		@RequestMapping(value = "/sendForceFullyAnalyticsSubscriber.do", produces = "application/json")
+		public @ResponseBody
+		Map<String, Boolean> testAnalyticsSubscriberApi2(HttpServletRequest request,
+														 HttpServletResponse response, @Param("data") String data, @Param("siteId") Long siteId) throws ServletException, IOException {
+
+			Subscriber subscriber = analyticsCronServiceImpl.getSubscriber(siteId);
+
+			LOGGER.info(subscriber);
+			try{
+
+				Map<String, Boolean> success = subscribersDataDispatchService.dispatchDataToSubscribers(siteId, Arrays.asList(subscriber));
+				return success;
+
+			}catch (Exception e){
+				LOGGER.error(e);
+				return Collections.singletonMap( e.getMessage(), false) ;
+			}
+		}
+
+
 		@RequestMapping(value = "/testAnalyticsSubscriberApi.do", produces = "application/json")
 		public @ResponseBody String testAnalyticsSubscriberApi(HttpServletRequest request,
 																HttpServletResponse response, @Param("data") String data, @Param("siteId") Long siteId) throws ServletException, IOException {
@@ -927,6 +947,8 @@
 				success = subscribersDataDispatchService.sendDataToSubscriber(subscriber, data);
 
 				uri = uri + String.format("?action=%s&type=%s&commit=%s", FeedDataSendAction.END.toString(), FeedDataImportType.FULL.toString(), false);
+				success = subscribersDataDispatchService.sendDataToSubscriber(subscriber, data);
+
 
 			}catch (Exception e){
 				LOGGER.error(e);
