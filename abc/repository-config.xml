@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+							http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+							http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+							http://www.springframework.org/schema/tx
+							http://www.springframework.org/schema/tx/spring-tx-3.1.xsd
+							http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd">
+	
+	<bean id="applicationContextAware" class="com.unbxd.feed.service.impl.SpringApplicationContextAware">
+	</bean>	
+
+
+	<!-- Mail Service Beans -->
+
+	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="${mailHost}" />
+		<property name="port" value="${mailHostPort}" />
+		<property name="username" value="${mailUsername}" />
+		<property name="password" value="${mailPassword}" />
+
+		<property name="javaMailProperties">
+			<props>
+				<prop key="mail.smtp.auth">true</prop>
+				<prop key="mail.smtp.starttls.enable">true</prop>
+			</props>
+		</property>
+	</bean>
+
+	<!-- Quartz Config -->
+  	<bean name="unbxdFeedProcessJob" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+		<property name="jobClass" value="com.unbxd.feed.schedular.UnbxdFeedProcessJob" />
+		<property name="jobDataAsMap">
+			<map>
+				<entry key="feedProcessService" value-ref="feedProcessService" />
+			</map>
+		</property>
+		<property name="durability" value="true" />
+	</bean>
+
+  	<bean name="analyticsDataJob" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+		<property name="jobClass" value="com.unbxd.feed.schedular.AnalyticsDataJob" />
+		<property name="jobDataAsMap">
+			<map>
+				<entry key="subscribersDataDispatchService" value-ref="subscribersDataDispatchService" />
+				<entry key="analyticsCronService" value-ref="analyticsCronService" />
+				<entry key="lockManager" value-ref="lockManager" />
+				<entry key="siteRequestService" value-ref="siteRequestService" />
+			</map>
+		</property>
+		<property name="durability" value="true" />
+	</bean>
+
+	<bean name="autoCompleteDataJob" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+		<property name="jobClass" value="com.unbxd.feed.schedular.AutoCompleteDataJob" />
+		<property name="jobDataAsMap">
+			<map>
+				<entry key="subscribersDataDispatchService" value-ref="subscribersDataDispatchService" />
+				<entry key="autocompleteCronDao" value-ref="autocompleteCronDao" />
+				<entry key="lockManager" value-ref="lockManager" />
+				<entry key="siteRequestService" value-ref="siteRequestService" />
+				<entry key="autoCompleteFieldService" value-ref="autoCompleteFieldService" />
+				<entry key="networkCalls" value-ref="networkCalls" />
+			</map>
+		</property>
+		<property name="durability" value="true" />
+	</bean>
+
+	<bean name="siteDbInstanceRefreshJob" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+		<property name="jobClass" value="com.unbxd.feed.schedular.SiteDbInstanceRefreshJob" />
+		<property name="jobDataAsMap">
+			<map>
+				<entry key="siteRequestDAO" value-ref="siteRequestDAO" />
+			</map>
+		</property>
+		<property name="durability" value="true" />
+	</bean>
+
+	<!-- Simple Trigger -->
+  	<bean id="simpleTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
+		<property name="jobDetail" ref="unbxdFeedProcessJob" />
+		<property name="repeatInterval" value="60000" />
+		<property name="startDelay" value="10000" />
+	</bean>
+	
+ 	<bean id="simpleTrigger2" class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
+		<property name="jobDetail" ref="analyticsDataJob" />
+		<property name="repeatInterval" value="120000" />
+		<property name="startDelay" value="30000" />
+	</bean>
+	
+	<bean id="autocompleteJobTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
+		<property name="jobDetail" ref="autoCompleteDataJob" />
+		<property name="repeatInterval" value="240000" />
+		<property name="startDelay" value="90000" />
+	</bean>
+
+	<bean id="siteDbInstanceRefreshJobTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
+		<property name="jobDetail" ref="siteDbInstanceRefreshJob" />
+		<property name="repeatInterval" value="300000" />
+        <property name="startDelay" value="0" />
+	</bean>
+
+	<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="jobDetails">
+			<list>
+				<!--<ref bean="unbxdFeedProcessJob" /> -->
+				<ref bean="analyticsDataJob" />
+				<ref bean="autoCompleteDataJob" />
+				<ref bean="siteDbInstanceRefreshJob" />
+			</list>
+		</property>
+
+		<property name="triggers">
+			<list>
+				<!-- <ref bean="simpleTrigger" /> -->
+				<ref bean="simpleTrigger2" />
+				<ref bean="autocompleteJobTrigger" />
+				<ref bean="siteDbInstanceRefreshJobTrigger" />
+			</list>
+		</property>
+	</bean>
+
+	<bean
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="searchSystemEnvironment" value="true" />
+		<property name="locations">
+			<value>classpath:application.properties</value>
+		</property>
+	</bean>
+
+	<!-- rest Template -->
+	<bean id="restTemplate" class="org.springframework.web.client.RestTemplate">
+		<constructor-arg>
+			<bean
+	class="org.springframework.http.client.HttpComponentsClientHttpRequestFactory">
+				<constructor-arg ref="customHttpClient" />
+			</bean>
+		</constructor-arg>
+	</bean>
+</beans>
+
