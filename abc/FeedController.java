@@ -919,7 +919,14 @@
 			LOGGER.info(subscriber);
 			boolean success = false;
 			try{
+
+				String uri = subscriber.getUri();
+
+				subscriber.setUri(uri + String.format("?type=%s&action=%s", FeedDataImportType.FULL.toString(), FeedDataSendAction.START.toString()));
+				data = "[]";
 				success = subscribersDataDispatchService.sendDataToSubscriber(subscriber, data);
+
+				uri = uri + String.format("?action=%s&type=%s&commit=%s", FeedDataSendAction.END.toString(), FeedDataImportType.FULL.toString(), false);
 
 			}catch (Exception e){
 				LOGGER.error(e);
