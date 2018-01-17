@@ -109,8 +109,8 @@
 		<property name="jobDetails">
 			<list>
 				<!--<ref bean="unbxdFeedProcessJob" /> -->
-				<!--<ref bean="analyticsDataJob" />
-				<ref bean="autoCompleteDataJob" />-->
+				<ref bean="analyticsDataJob" />
+				<!--<ref bean="autoCompleteDataJob" />-->
 				<ref bean="siteDbInstanceRefreshJob" />
 			</list>
 		</property>
@@ -119,7 +119,7 @@
 			<list>
 				<!-- <ref bean="simpleTrigger" /> -->
 				<ref bean="simpleTrigger2" />
-				<ref bean="autocompleteJobTrigger" />
+				<!--<ref bean="autocompleteJobTrigger" />-->
 				<ref bean="siteDbInstanceRefreshJobTrigger" />
 			</list>
 		</property>
